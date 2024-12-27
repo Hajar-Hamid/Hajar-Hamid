@@ -32,7 +32,7 @@ class Hajar_Hamid:
         self.role = 'AI Specialist & Data Scientist/Analyst'
 
         # find me
-        self.linkedin = 'linkedin.com/in/hajarhamid/'
+        self.linkedin = 'linkedin.com/in/hajar-hamid/'
 
         self.stack = ['AI Engineer', 'Data Science', 'Data Analysis']
 
