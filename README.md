@@ -48,11 +48,3 @@ if __name__ == '__main__':
     me = Hajar_Hamid()
 ```
 
-## 📊 Profile stat
-<br />
-<div align="center">
-    <img src="https://streak-stats.demolab.com/?user=ez7mz&theme=tokyonight" />
-</div>
-<p>
-    <img alt="footer" src="./static/footer.svg">
-</p>
