@@ -7,19 +7,15 @@
 
 <p align="center">
 	<a target="_blank" href="mailto:hajar06hamid@gmail.com">
-		<img width="64px" alt="Email" title="send me an email" src="static/social-icons/mail.gif"/>
+		<img width="64px" alt="Email" title="send me an email" src="mail.gif"/>
 	</a>
 	&emsp;
-	<a target="_blank" href="https://www.linkedin.com/in/hajarhamid/">
-		<img width="64px" alt="Linkedin" title="Connect with me" src="static/social-icons/linkedin.gif"/>
+	<a target="_blank" href="https://www.linkedin.com/in/hajar-hamid/">
+		<img width="64px" alt="Linkedin" title="Connect with me" src="linkedin.gif"/>
 	</a>
 </p>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/ez7mz/ez7mz/blob/output/github-snake-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/ez7mz/ez7mz/blob/output/github-snake.svg" />
-  <img alt="github-snake" src="https://github.com/ez7mz/ez7mz/blob/output/github-snake.svg" />
-</picture>
+
 
 ---
 ## 👩‍🎓 About
