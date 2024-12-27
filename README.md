@@ -24,7 +24,7 @@
 ---
 ## 👩‍🎓 About
 <p align="left">
-Greetings! I'm currently a Data Engineering student, focusing on building cloud-based Data pipelines and crafting well-designed data acquisition systems. My passion lies in building dependable data setups that help organizations thrive in the world of information.
+Greetings! I'm a fresh graduate Data Scientist/Analyst and AI Specialist. My passion lies in building dependable data setups that help organizations thrive in the world of information.
 
 ```python
 class Hajar_Hamid:
