@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EcmDocs")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d33a2fb6626815cb059eafb2fcea94033748647f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+285983b552a8af1922f8d93fa7688803072bf995")]
 [assembly: System.Reflection.AssemblyProductAttribute("EcmDocs")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EcmDocs")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,143 @@
+@page "/admin/types"
+@using EcmDocs.Data.Entities
+@inject EcmDocs.Services.Interfaces.IDocumentTypeService TypeService
+
+<h3>Administration - Types de documents</h3>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Créer un type</h5>
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Code</label>
+        <input class="form-control" @bind="NewCode" />
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Nom</label>
+        <input class="form-control" @bind="NewName" />
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary" @onclick="CreateTypeAsync" disabled="@IsBusy">Créer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <h5>Types existants</h5>
+    <ul class="list-group">
+      @foreach (var t in Types)
+      {
+        <li class="list-group-item" @onclick="(() => SelectType(t))" style="cursor:pointer;">
+          <div class="fw-bold">@t.Name</div>
+          <div class="text-muted">@t.Code</div>
+        </li>
+      }
+    </ul>
+  </div>
+  <div class="col-md-6">
+    @if (Selected is not null)
+    {
+      <h5>Métadonnées pour @Selected.Name</h5>
+      <ul>
+        @foreach (var md in Selected.MetadataDefinitions.OrderBy(m => m.Key))
+        {
+          <li>@md.Key (@md.DataType) @(md.IsRequired ? "[obligatoire]" : "")</li>
+        }
+      </ul>
+
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Ajouter une métadonnée</h6>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label">Clé</label>
+              <input class="form-control" @bind="MetaKey" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Type</label>
+              <select class="form-select" @bind="MetaType">
+                <option value="@MetadataDataType.Text">Texte</option>
+                <option value="@MetadataDataType.Date">Date</option>
+                <option value="@MetadataDataType.Number">Nombre</option>
+              </select>
+            </div>
+            <div class="col-md-2 form-check mt-4">
+              <input id="req" class="form-check-input" type="checkbox" @bind="MetaRequired" />
+              <label class="form-check-label" for="req">Oblig.</label>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-secondary" @onclick="AddMetadataAsync" disabled="@IsBusy">Ajouter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+  
+</div>
+
+@code {
+  private IReadOnlyList<DocumentType> Types = Array.Empty<DocumentType>();
+  private DocumentType? Selected;
+  private bool IsBusy;
+
+  private string NewCode { get; set; } = string.Empty;
+  private string NewName { get; set; } = string.Empty;
+
+  private string MetaKey { get; set; } = string.Empty;
+  private MetadataDataType MetaType { get; set; } = MetadataDataType.Text;
+  private bool MetaRequired { get; set; }
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    Types = await TypeService.GetAllAsync();
+    if (Selected is not null)
+    {
+      Selected = (await TypeService.GetByIdAsync(Selected.Id))!;
+    }
+  }
+
+  private async Task CreateTypeAsync()
+  {
+    if (string.IsNullOrWhiteSpace(NewCode) || string.IsNullOrWhiteSpace(NewName)) return;
+    try
+    {
+      IsBusy = true;
+      await TypeService.CreateAsync(NewCode, NewName, Array.Empty<(string, MetadataDataType, bool)>());
+      NewCode = string.Empty;
+      NewName = string.Empty;
+      await LoadAsync();
+    }
+    finally { IsBusy = false; }
+  }
+
+  private void SelectType(DocumentType t)
+  {
+    Selected = t;
+    StateHasChanged();
+  }
+
+  private async Task AddMetadataAsync()
+  {
+    if (Selected is null || string.IsNullOrWhiteSpace(MetaKey)) return;
+    try
+    {
+      IsBusy = true;
+      await TypeService.AddMetadataAsync(Selected.Id, MetaKey, MetaType, MetaRequired);
+      MetaKey = string.Empty;
+      MetaType = MetadataDataType.Text;
+      MetaRequired = false;
+      Selected = (await TypeService.GetByIdAsync(Selected.Id))!;
+      await LoadAsync();
+    }
+    finally { IsBusy = false; }
+  }
+}
+
