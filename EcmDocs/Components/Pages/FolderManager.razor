@@ -1,0 +1,69 @@
+@page "/folders"
+@inject EcmDocs.Services.Interfaces.IFolderService FolderService
+
+<h3>Gestion des dossiers</h3>
+
+<EditForm Model="this" OnValidSubmit="CreateFolderAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Nom du dossier</label>
+            <input class="form-control" @bind="NewFolderName" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Dossier parent (optionnel)</label>
+            <select class="form-select" @bind="ParentFolderId">
+                <option value="">-- Racine --</option>
+                @foreach (var f in Folders)
+                {
+                    <option value="@f.Id">@f.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary" type="submit" disabled="@IsSubmitting">Créer</button>
+        </div>
+    </div>
+</EditForm>
+
+<hr />
+
+<h5>Dossiers existants</h5>
+<ul>
+@foreach (var f in Folders)
+{
+    <li>@f.Name</li>
+}
+</ul>
+
+@code {
+    private IReadOnlyList<EcmDocs.Data.Entities.Folder> Folders = Array.Empty<EcmDocs.Data.Entities.Folder>();
+    private string NewFolderName { get; set; } = string.Empty;
+    private Guid? ParentFolderId { get; set; }
+    private bool IsSubmitting { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Folders = await FolderService.GetTreeAsync();
+    }
+
+    private async Task CreateFolderAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewFolderName)) return;
+        try
+        {
+            IsSubmitting = true;
+            await FolderService.CreateAsync(NewFolderName.Trim(), ParentFolderId);
+            NewFolderName = string.Empty;
+            ParentFolderId = null;
+            Folders = await FolderService.GetTreeAsync();
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+}
+
