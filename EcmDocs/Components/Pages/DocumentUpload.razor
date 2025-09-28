@@ -1,0 +1,173 @@
+@page "/upload"
+@using EcmDocs.Data.Entities
+@inject EcmDocs.Services.Interfaces.IFolderService FolderService
+@inject EcmDocs.Services.Interfaces.IDocumentTypeService DocumentTypeService
+@inject EcmDocs.Services.Interfaces.IDocumentService DocumentService
+
+<h3>Ajouter un document</h3>
+
+<EditForm Model="this" OnValidSubmit="OnSubmitAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Dossier</label>
+        <select class="form-select" @bind="SelectedFolderId">
+            <option value="">-- Choisir --</option>
+            @foreach (var f in Folders)
+            {
+                <option value="@f.Id">@f.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Type de document</label>
+        <select class="form-select" @onchange="OnTypeChanged">
+            <option value="">-- Choisir --</option>
+            @foreach (var t in Types)
+            {
+                <option value="@t.Id">@t.Name (@t.Code)</option>
+            }
+        </select>
+    </div>
+
+    @if (SelectedType is not null)
+    {
+        <div class="mb-3">
+            <label class="form-label">Fichier</label>
+            <InputFile OnChange="OnFileSelected" />
+            @if (!string.IsNullOrEmpty(SelectedFileName))
+            {
+                <div class="form-text">@SelectedFileName (@SelectedContentType, @SelectedFileSize bytes)</div>
+            }
+        </div>
+
+        <div class="mb-3">
+            <h5>Métadonnées</h5>
+            @foreach (var def in SelectedType.MetadataDefinitions)
+            {
+                <div class="mb-2">
+                    <label class="form-label">@def.Key @if(def.IsRequired){<span class="text-danger">*</span>}</label>
+                    @switch (def.DataType)
+                    {
+                        case MetadataDataType.Text:
+                            <input class="form-control" @bind="MetadataTextValues[def.Id]" />
+                            break;
+                        case MetadataDataType.Date:
+                            <input type="date" class="form-control" @bind="MetadataDateValues[def.Id]" />
+                            break;
+                        case MetadataDataType.Number:
+                            <input type="number" class="form-control" @bind="MetadataNumberValues[def.Id]" />
+                            break;
+                    }
+                </div>
+            }
+        </div>
+
+        <button class="btn btn-primary" type="submit" disabled="@IsSubmitting">Enregistrer</button>
+    }
+</EditForm>
+
+@code {
+    private IReadOnlyList<Folder> Folders = Array.Empty<Folder>();
+    private IReadOnlyList<DocumentType> Types = Array.Empty<DocumentType>();
+
+    private Guid? SelectedFolderId { get; set; }
+    private DocumentType? SelectedType { get; set; }
+
+    private string? SelectedFileName { get; set; }
+    private string? SelectedContentType { get; set; }
+    private long SelectedFileSize { get; set; }
+    private Stream? SelectedFileStream { get; set; }
+
+    private Dictionary<Guid, string?> MetadataTextValues { get; } = new();
+    private Dictionary<Guid, DateTime?> MetadataDateValues { get; } = new();
+    private Dictionary<Guid, decimal?> MetadataNumberValues { get; } = new();
+
+    private bool IsSubmitting { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Folders = await FolderService.GetTreeAsync();
+        Types = await DocumentTypeService.GetAllAsync();
+    }
+
+    private async Task OnTypeChanged(ChangeEventArgs e)
+    {
+        var str = e.Value?.ToString();
+        if (Guid.TryParse(str, out var id))
+        {
+            SelectedType = await DocumentTypeService.GetByIdAsync(id);
+        }
+        else
+        {
+            SelectedType = null;
+        }
+    }
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        SelectedFileName = file.Name;
+        SelectedContentType = file.ContentType;
+        SelectedFileSize = file.Size;
+        SelectedFileStream = file.OpenReadStream(long.MaxValue);
+    }
+
+    private async Task OnSubmitAsync()
+    {
+        if (SelectedFolderId is null || SelectedType is null || SelectedFileStream is null || string.IsNullOrEmpty(SelectedFileName))
+        {
+            return;
+        }
+
+        try
+        {
+            IsSubmitting = true;
+            var metadata = new Dictionary<Guid, object?>();
+            foreach (var def in SelectedType.MetadataDefinitions)
+            {
+                switch (def.DataType)
+                {
+                    case MetadataDataType.Text:
+                        MetadataTextValues.TryGetValue(def.Id, out var t);
+                        metadata[def.Id] = t;
+                        break;
+                    case MetadataDataType.Date:
+                        MetadataDateValues.TryGetValue(def.Id, out var d);
+                        metadata[def.Id] = d;
+                        break;
+                    case MetadataDataType.Number:
+                        MetadataNumberValues.TryGetValue(def.Id, out var n);
+                        metadata[def.Id] = n;
+                        break;
+                }
+            }
+
+            await DocumentService.CreateAsync(
+                SelectedFolderId.Value,
+                SelectedType.Id,
+                SelectedFileName!,
+                SelectedContentType ?? "application/octet-stream",
+                SelectedFileStream!,
+                SelectedFileSize,
+                metadata
+            );
+
+            // reset state after save
+            SelectedFileName = null;
+            SelectedContentType = null;
+            SelectedFileSize = 0;
+            SelectedFileStream = null;
+            MetadataTextValues.Clear();
+            MetadataDateValues.Clear();
+            MetadataNumberValues.Clear();
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+}
+
